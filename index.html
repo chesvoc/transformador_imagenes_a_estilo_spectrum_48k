@@ -1,0 +1,1478 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZX48 Studio - Image Processor</title>
+    <style>
+        :root {
+            --bg: #0A1630;
+            --panel: #11234D;
+            --accent: #FFD23F;
+            --accent2: #77C0FF;
+            --outline: #29FFD1;
+            --text: #E7F0FF;
+            --ok: #38D17D;
+            --err: #FF6B6B;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: var(--bg);
+            background-image: url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgdmlld0JveD0iMCAwIDEwMCAxMDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PGZpbHRlciBpZD0iZ2xvdyI+PGZlRHJvcFNoYWRvdyBkeD0iMCIgZHk9IjAiIHN0ZERldmlhdGlvbj0iMiIgZmxvb2QtY29sb3I9IiMyOUZGRDEiIGZsb29kLW9wYWNpdHk9IjAuMyIvPjwvZmlsdGVyPjwvZGVmcz48ZyBmaWxsPSJub25lIiBzdHJva2U9IiMyOUZGRDEiIHN0cm9rZS13aWR0aD0iMC41IiBmaWx0ZXI9InVybCgjZ2xvdykiPjxwYXRoIGQ9Ik0xMCwxMCBMOTAsMTAgTDkwLDMwIEw3MCwzMCBMNzAsNTAgTDUwLDUwIi8+PHBhdGggZD0iTTMwLDcwIEwzMCw5MCBMOTA5MCBMOTA3MCIvPjxjaXJjbGUgY3g9IjIwIiBjeT0iMjAiIHI9IjMiIGZpbGw9IiMyOUZGRDEiIG9wYWNpdHk9IjAuNiIvPjxjaXJjbGUgY3g9IjgwIiBjeT0iODAiIHI9IjIiIGZpbGw9IiM3N0MwRkYiIG9wYWNpdHk9IjAuNCIvPjxwYXRoIGQ9Ik01MCwxMCBRNjAsMjAgNTAsMzAgUTQwLDQwIDUwLDUwIi8+PC9nPjwvc3ZnPg==");
+            background-size: 100px 100px;
+            color: var(--text);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .main-container {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .canvas-section {
+            background: var(--panel);
+            border-radius: 12px;
+            border: 2px solid var(--outline);
+            padding: 20px;
+            box-shadow: 0 0 20px rgba(41, 255, 209, 0.2);
+        }
+
+        .title-capsule {
+            background: var(--accent);
+            color: #000;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 15px;
+            border: 2px solid rgba(0, 0, 0, 0.2);
+            box-shadow: 0 4px 8px rgba(255, 210, 63, 0.3);
+        }
+
+        #zxCanvas {
+            border: 4px solid var(--outline);
+            border-radius: 8px;
+            background: #000;
+            image-rendering: pixelated;
+            image-rendering: -moz-crisp-edges;
+            image-rendering: crisp-edges;
+            display: block;
+            margin: 0 auto;
+            box-shadow: 0 0 15px rgba(41, 255, 209, 0.4);
+            width: 512px;
+            height: 384px;
+        }
+
+        .controls-panel {
+            background: var(--panel);
+            border-radius: 12px;
+            border: 2px solid var(--outline);
+            padding: 20px;
+            box-shadow: 0 0 20px rgba(41, 255, 209, 0.2);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .control-group {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: rgba(16, 32, 64, 0.5);
+            border-radius: 8px;
+            border: 1px solid var(--outline);
+        }
+
+        .control-group h3 {
+            color: var(--accent2);
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        input[type="file"] {
+            background: var(--panel);
+            color: var(--text);
+            border: 2px solid var(--outline);
+            border-radius: 6px;
+            padding: 8px;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            margin: 5px 0;
+            accent-color: var(--accent);
+        }
+
+        input[type="radio"] {
+            accent-color: var(--accent);
+            margin-right: 5px;
+        }
+
+        .slider-container {
+            margin-bottom: 10px;
+        }
+
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: var(--accent2);
+            margin-bottom: 5px;
+        }
+
+        button {
+            background: var(--panel);
+            color: var(--text);
+            border: 2px solid var(--outline);
+            border-radius: 6px;
+            padding: 8px 12px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 12px;
+            margin: 2px;
+            transition: all 0.2s;
+        }
+
+        button:hover {
+            background: var(--outline);
+            color: var(--bg);
+            box-shadow: 0 0 10px rgba(41, 255, 209, 0.5);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        button.primary {
+            background: var(--accent);
+            color: #000;
+            border-color: var(--accent);
+        }
+
+        button.primary:hover:not(:disabled) {
+            background: #E6BD36;
+            box-shadow: 0 0 10px rgba(255, 210, 63, 0.5);
+        }
+
+        .checkbox-container, .radio-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 5px 0;
+            font-size: 12px;
+        }
+
+        input[type="checkbox"] {
+            accent-color: var(--accent);
+        }
+
+        #statusPanel {
+            background: rgba(16, 32, 64, 0.7);
+            border: 1px solid var(--accent2);
+            border-radius: 6px;
+            padding: 10px;
+            font-size: 11px;
+            line-height: 1.4;
+            white-space: pre-wrap;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+
+        .button-row {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+
+        .mode-controls {
+            display: none;
+        }
+
+        .mode-controls.active {
+            display: block;
+        }
+
+        select {
+            background: var(--panel);
+            color: var(--text);
+            border: 2px solid var(--outline);
+            border-radius: 6px;
+            padding: 6px;
+            font-family: inherit;
+            font-size: 12px;
+        }
+
+        .pass { color: var(--ok); }
+        .fail { color: var(--err); }
+        .warning { color: var(--accent); }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <div class="canvas-section">
+            <div class="title-capsule">ZX48 STUDIO - IMAGE PROCESSOR</div>
+            <canvas id="zxCanvas" width="256" height="192"></canvas>
+        </div>
+
+        <div class="controls-panel">
+            <div class="control-group">
+                <h3>IMAGE INPUT</h3>
+                <input type="file" id="imageInput" accept="image/*">
+                <div class="checkbox-container">
+                    <input type="checkbox" id="ditheringEnabled" checked>
+                    <label for="ditheringEnabled">Floyd-Steinberg Dithering</label>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <h3>PROCESSING MODE</h3>
+                <div class="radio-container">
+                    <input type="radio" id="modeClassic8" name="mode" value="classic8" checked>
+                    <label for="modeClassic8">Classic ZX (Base 8)</label>
+                </div>
+                <div class="radio-container">
+                    <input type="radio" id="modeClassic15" name="mode" value="classic15">
+                    <label for="modeClassic15">Classic ZX (Base 8 + Bright)</label>
+                </div>
+                <div class="radio-container">
+                    <input type="radio" id="modeOutline" name="mode" value="outline">
+                    <label for="modeOutline">AI Outline + Brush</label>
+                </div>
+                <div class="radio-container">
+                    <input type="radio" id="modeHatching" name="mode" value="hatching">
+                    <label for="modeHatching">B/W Hatching</label>
+                </div>
+                <div class="checkbox-container">
+                    <input type="checkbox" id="attributeClash">
+                    <label for="attributeClash">Attribute 8×8 (Clash)</label>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <h3>ADJUSTMENTS</h3>
+                <div class="slider-container">
+                    <div class="slider-label">
+                        <span>Brightness</span>
+                        <span id="brightnessValue">0</span>
+                    </div>
+                    <input type="range" id="brightness" min="-100" max="100" value="0">
+                </div>
+                <div class="slider-container">
+                    <div class="slider-label">
+                        <span>Contrast</span>
+                        <span id="contrastValue">1.0</span>
+                    </div>
+                    <input type="range" id="contrast" min="0.1" max="3.0" step="0.1" value="1.0">
+                </div>
+                <div class="slider-container">
+                    <div class="slider-label">
+                        <span>Saturation</span>
+                        <span id="saturationValue">1.0</span>
+                    </div>
+                    <input type="range" id="saturation" min="0" max="2.0" step="0.1" value="1.0">
+                </div>
+                <div class="checkbox-container">
+                    <input type="checkbox" id="livePreview" checked>
+                    <label for="livePreview">Live Preview</label>
+                </div>
+                <div class="button-row">
+                    <button id="btnApply" class="primary">APPLY</button>
+                    <button id="btnReset">RESET</button>
+                    <button id="btnAnalyze">ANALYZE</button>
+                    <button id="btnSmart" class="primary">SMART ENHANCE</button>
+                </div>
+            </div>
+
+            <!-- Attribute Clash Controls -->
+            <div class="control-group mode-controls" id="attributeControls">
+                <h3>ATTRIBUTE SETTINGS</h3>
+                <div class="slider-container">
+                    <div class="slider-label">
+                        <span>Cell Size</span>
+                        <span id="cellSizeValue">8</span>
+                    </div>
+                    <input type="range" id="cellSize" min="4" max="16" value="8">
+                </div>
+                <div class="slider-container">
+                    <div class="slider-label">
+                        <span>Bias Ink/Paper</span>
+                        <span id="biasValue">0.5</span>
+                    </div>
+                    <input type="range" id="bias" min="0" max="1.0" step="0.1" value="0.5">
+                </div>
+            </div>
+
+            <!-- Outline Mode Controls -->
+            <div class="control-group mode-controls" id="outlineControls">
+                <h3>OUTLINE SETTINGS</h3>
+                <div class="checkbox-container">
+                    <input type="checkbox" id="outlineEnabled" checked>
+                    <label for="outlineEnabled">Enable Outline</label>
+                </div>
+                <div class="slider-container">
+                    <div class="slider-label">
+                        <span>Edge Threshold</span>
+                        <span id="edgeThresholdValue">0.3</span>
+                    </div>
+                    <input type="range" id="edgeThreshold" min="0.1" max="1.0" step="0.1" value="0.3">
+                </div>
+                <div class="slider-container">
+                    <div class="slider-label">
+                        <span>Brush Width Min</span>
+                        <span id="brushMinValue">1</span>
+                    </div>
+                    <input type="range" id="brushMin" min="1" max="5" value="1">
+                </div>
+                <div class="slider-container">
+                    <div class="slider-label">
+                        <span>Brush Width Max</span>
+                        <span id="brushMaxValue">4</span>
+                    </div>
+                    <input type="range" id="brushMax" min="2" max="8" value="4">
+                </div>
+                <div class="slider-container">
+                    <div class="slider-label">
+                        <span>Smoothness</span>
+                        <span id="smoothnessValue">0.5</span>
+                    </div>
+                    <input type="range" id="smoothness" min="0.1" max="1.0" step="0.1" value="0.5">
+                </div>
+                <button id="btnOutline" class="primary">APPLY OUTLINE</button>
+            </div>
+
+            <!-- Hatching Mode Controls -->
+            <div class="control-group mode-controls" id="hatchingControls">
+                <h3>HATCHING SETTINGS</h3>
+                <div class="slider-container">
+                    <div class="slider-label">
+                        <span>Pattern Density</span>
+                        <span id="densityValue">0.5</span>
+                    </div>
+                    <input type="range" id="density" min="0.1" max="1.0" step="0.1" value="0.5">
+                </div>
+                <div class="slider-container">
+                    <div class="slider-label">
+                        <span>Pattern</span>
+                        <span id="patternValue">dot</span>
+                    </div>
+                    <select id="pattern">
+                        <option value="dot">Dots</option>
+                        <option value="line">Lines</option>
+                        <option value="cross">Cross-hatch</option>
+                    </select>
+                </div>
+                <div class="slider-container">
+                    <div class="slider-label">
+                        <span>Angle</span>
+                        <span id="angleValue">45</span>
+                    </div>
+                    <input type="range" id="angle" min="0" max="180" value="45">
+                </div>
+                <div class="slider-container">
+                    <div class="slider-label">
+                        <span>Line Width</span>
+                        <span id="lineWidthValue">1</span>
+                    </div>
+                    <input type="range" id="lineWidth" min="1" max="3" value="1">
+                </div>
+                <button id="btnHatching" class="primary">APPLY HATCHING</button>
+            </div>
+
+            <div class="control-group">
+                <h3>OUTPUT</h3>
+                <div class="button-row">
+                    <button id="btnDownload" class="primary">DOWNLOAD</button>
+                    <button id="btnToggle">TOGGLE VIEW</button>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <h3>STATUS</h3>
+                <div id="statusPanel"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const ZXImageLab = (function() {
+            'use strict';
+            
+            // ZX Spectrum palettes
+            const ZX_BASE_8 = [
+                [0,0,0],[0,0,192],[192,0,0],[192,0,192],
+                [0,192,0],[0,192,192],[192,192,0],[192,192,192]
+            ];
+
+            const ZX_BRIGHT_15 = [
+                [0,0,0],[0,0,192],[192,0,0],[192,0,192],[0,192,0],[0,192,192],[192,192,0],[192,192,192],
+                [0,0,255],[255,0,0],[255,0,255],[0,255,0],[0,255,255],[255,255,0],[255,255,255]
+            ];
+
+            let originalImageData = null;
+            let processedImageData = null;
+            let currentImageData = null;
+            let imageVisible = true;
+            let currentMode = 'classic8';
+
+            const canvas = document.getElementById('zxCanvas');
+            const ctx = canvas.getContext('2d');
+
+            function log(message, type = 'info') {
+                const statusPanel = document.getElementById('statusPanel');
+                const timestamp = new Date().toLocaleTimeString();
+                const className = type === 'error' ? 'fail' : type === 'warning' ? 'warning' : 'pass';
+                statusPanel.innerHTML += `<span class="${className}">[${timestamp}] ${message}</span>\n`;
+                statusPanel.scrollTop = statusPanel.scrollHeight;
+                console.log(`[ZXImageLab] ${message}`);
+            }
+
+            function showWarning(message) {
+                log(message, 'warning');
+                return false;
+            }
+
+            function showError(message) {
+                log(message, 'error');
+                return false;
+            }
+
+            function autoOpenFileDialog() {
+                log('No image loaded. Opening file selector...', 'warning');
+                document.getElementById('imageInput').click();
+            }
+
+            function colorDistance(c1, c2) {
+                const dr = c1[0] - c2[0];
+                const dg = c1[1] - c2[1];
+                const db = c1[2] - c2[2];
+                return Math.sqrt(dr * dr + dg * dg + db * db);
+            }
+
+            function findNearestColor(rgb, palette) {
+                let minDistance = Infinity;
+                let nearestIndex = 0;
+                for (let i = 0; i < palette.length; i++) {
+                    const distance = colorDistance(rgb, palette[i]);
+                    if (distance < minDistance) {
+                        minDistance = distance;
+                        nearestIndex = i;
+                    }
+                }
+                return nearestIndex;
+            }
+
+            function getCurrentPalette() {
+                if (currentMode === 'classic15' || currentMode === 'outline') {
+                    return ZX_BRIGHT_15;
+                }
+                return ZX_BASE_8;
+            }
+
+            function applyImageAdjustments(imageData, brightness = 0, contrast = 1.0, saturation = 1.0) {
+                if (!imageData || !imageData.data) {
+                    showError('Invalid image data for adjustments');
+                    return null;
+                }
+                
+                const data = new Uint8ClampedArray(imageData.data);
+                for (let i = 0; i < data.length; i += 4) {
+                    let r = data[i];
+                    let g = data[i + 1];
+                    let b = data[i + 2];
+                    
+                    // Brightness
+                    r += brightness;
+                    g += brightness;
+                    b += brightness;
+                    
+                    // Contrast
+                    r = ((r - 128) * contrast) + 128;
+                    g = ((g - 128) * contrast) + 128;
+                    b = ((b - 128) * contrast) + 128;
+                    
+                    // Saturation
+                    const gray = 0.299 * r + 0.587 * g + 0.114 * b;
+                    r = gray + saturation * (r - gray);
+                    g = gray + saturation * (g - gray);
+                    b = gray + saturation * (b - gray);
+                    
+                    data[i] = Math.max(0, Math.min(255, r));
+                    data[i + 1] = Math.max(0, Math.min(255, g));
+                    data[i + 2] = Math.max(0, Math.min(255, b));
+                }
+                return new ImageData(data, imageData.width, imageData.height);
+            }
+
+            function floydSteinbergDither(imageData, palette) {
+                if (!imageData || !imageData.data) return null;
+                
+                const width = imageData.width;
+                const height = imageData.height;
+                const data = new Uint8ClampedArray(imageData.data);
+                
+                for (let y = 0; y < height; y++) {
+                    for (let x = 0; x < width; x++) {
+                        const index = (y * width + x) * 4;
+                        const oldR = data[index];
+                        const oldG = data[index + 1];
+                        const oldB = data[index + 2];
+                        
+                        const colorIndex = findNearestColor([oldR, oldG, oldB], palette);
+                        const newColor = palette[colorIndex];
+                        
+                        data[index] = newColor[0];
+                        data[index + 1] = newColor[1];
+                        data[index + 2] = newColor[2];
+                        
+                        const errorR = oldR - newColor[0];
+                        const errorG = oldG - newColor[1];
+                        const errorB = oldB - newColor[2];
+                        
+                        const distributeError = (dx, dy, factor) => {
+                            const nx = x + dx;
+                            const ny = y + dy;
+                            if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
+                                const nIndex = (ny * width + nx) * 4;
+                                data[nIndex] = Math.max(0, Math.min(255, data[nIndex] + errorR * factor));
+                                data[nIndex + 1] = Math.max(0, Math.min(255, data[nIndex + 1] + errorG * factor));
+                                data[nIndex + 2] = Math.max(0, Math.min(255, data[nIndex + 2] + errorB * factor));
+                            }
+                        };
+                        
+                        distributeError(1, 0, 7/16);
+                        distributeError(-1, 1, 3/16);
+                        distributeError(0, 1, 5/16);
+                        distributeError(1, 1, 1/16);
+                    }
+                }
+                return new ImageData(data, width, height);
+            }
+
+            function quantizeToZX(imageData, palette, useDithering = true) {
+                if (!imageData || !imageData.data) return null;
+                
+                if (useDithering) {
+                    return floydSteinbergDither(imageData, palette);
+                } else {
+                    const data = new Uint8ClampedArray(imageData.data);
+                    for (let i = 0; i < data.length; i += 4) {
+                        const colorIndex = findNearestColor([data[i], data[i + 1], data[i + 2]], palette);
+                        const color = palette[colorIndex];
+                        data[i] = color[0];
+                        data[i + 1] = color[1];
+                        data[i + 2] = color[2];
+                    }
+                    return new ImageData(data, imageData.width, imageData.height);
+                }
+            }
+
+            function applyAttributeClash(imageData, palette, cellSize, bias) {
+                if (!imageData || !imageData.data) return null;
+                
+                const width = imageData.width;
+                const height = imageData.height;
+                const data = new Uint8ClampedArray(imageData.data);
+                
+                for (let blockY = 0; blockY < height; blockY += cellSize) {
+                    for (let blockX = 0; blockX < width; blockX += cellSize) {
+                        // Count color frequencies in this block
+                        const colorCounts = new Array(palette.length).fill(0);
+                        
+                        for (let y = blockY; y < Math.min(blockY + cellSize, height); y++) {
+                            for (let x = blockX; x < Math.min(blockX + cellSize, width); x++) {
+                                const idx = (y * width + x) * 4;
+                                const colorIndex = findNearestColor([data[idx], data[idx + 1], data[idx + 2]], palette);
+                                colorCounts[colorIndex]++;
+                            }
+                        }
+                        
+                        // Find two most frequent colors
+                        let firstMax = -1, secondMax = -1;
+                        let firstColor = 0, secondColor = 0;
+                        
+                        for (let i = 0; i < colorCounts.length; i++) {
+                            if (colorCounts[i] > firstMax) {
+                                secondMax = firstMax;
+                                secondColor = firstColor;
+                                firstMax = colorCounts[i];
+                                firstColor = i;
+                            } else if (colorCounts[i] > secondMax) {
+                                secondMax = colorCounts[i];
+                                secondColor = i;
+                            }
+                        }
+                        
+                        // Apply bias (favor ink or paper)
+                        const inkColor = bias > 0.5 ? firstColor : secondColor;
+                        const paperColor = bias > 0.5 ? secondColor : firstColor;
+                        
+                        // Remap all pixels in block to nearest of these two colors
+                        for (let y = blockY; y < Math.min(blockY + cellSize, height); y++) {
+                            for (let x = blockX; x < Math.min(blockX + cellSize, width); x++) {
+                                const idx = (y * width + x) * 4;
+                                const currentColor = [data[idx], data[idx + 1], data[idx + 2]];
+                                
+                                const distToInk = colorDistance(currentColor, palette[inkColor]);
+                                const distToPaper = colorDistance(currentColor, palette[paperColor]);
+                                
+                                const targetColor = distToInk < distToPaper ? palette[inkColor] : palette[paperColor];
+                                data[idx] = targetColor[0];
+                                data[idx + 1] = targetColor[1];
+                                data[idx + 2] = targetColor[2];
+                            }
+                        }
+                    }
+                }
+                
+                return new ImageData(data, width, height);
+            }
+
+            function calculateSaliency(imageData) {
+                if (!imageData) return null;
+                
+                const width = imageData.width;
+                const height = imageData.height;
+                const data = imageData.data;
+                const saliency = new Float32Array(width * height);
+                
+                for (let y = 1; y < height - 1; y++) {
+                    for (let x = 1; x < width - 1; x++) {
+                        const idx = (y * width + x) * 4;
+                        const centerLum = 0.299 * data[idx] + 0.587 * data[idx + 1] + 0.114 * data[idx + 2];
+                        
+                        let avgNeighbor = 0;
+                        let count = 0;
+                        
+                        for (let dy = -1; dy <= 1; dy++) {
+                            for (let dx = -1; dx <= 1; dx++) {
+                                if (dx === 0 && dy === 0) continue;
+                                const nIdx = ((y + dy) * width + (x + dx)) * 4;
+                                const nLum = 0.299 * data[nIdx] + 0.587 * data[nIdx + 1] + 0.114 * data[nIdx + 2];
+                                avgNeighbor += nLum;
+                                count++;
+                            }
+                        }
+                        avgNeighbor /= count;
+                        
+                        const diff = Math.abs(centerLum - avgNeighbor);
+                        saliency[y * width + x] = Math.min(1.0, diff / 128.0);
+                    }
+                }
+                
+                return saliency;
+            }
+
+            function calculateEdges(imageData) {
+                if (!imageData) return null;
+                
+                const width = imageData.width;
+                const height = imageData.height;
+                const data = imageData.data;
+                const edges = new Float32Array(width * height);
+                
+                for (let y = 1; y < height - 1; y++) {
+                    for (let x = 1; x < width - 1; x++) {
+                        const getLum = (dx, dy) => {
+                            const idx = ((y + dy) * width + (x + dx)) * 4;
+                            return 0.299 * data[idx] + 0.587 * data[idx + 1] + 0.114 * data[idx + 2];
+                        };
+                        
+                        const gx = -1 * getLum(-1, -1) + 1 * getLum(1, -1) +
+                                  -2 * getLum(-1, 0) + 2 * getLum(1, 0) +
+                                  -1 * getLum(-1, 1) + 1 * getLum(1, 1);
+                        
+                        const gy = -1 * getLum(-1, -1) - 2 * getLum(0, -1) - 1 * getLum(1, -1) +
+                                   1 * getLum(-1, 1) + 2 * getLum(0, 1) + 1 * getLum(1, 1);
+                        
+                        const magnitude = Math.sqrt(gx * gx + gy * gy);
+                        edges[y * width + x] = Math.min(1.0, magnitude / 255.0);
+                    }
+                }
+                
+                return edges;
+            }
+
+            function drawImageToCanvas(imageData) {
+                ctx.fillStyle = '#000';
+                ctx.fillRect(0, 0, 256, 192);
+                if (imageVisible && imageData) {
+                    ctx.putImageData(imageData, 0, 0);
+                }
+            }
+
+            function processImageWithCurrentSettings() {
+                if (!originalImageData) {
+                    return showWarning('No original image data available');
+                }
+                
+                const brightness = parseInt(document.getElementById('brightness').value) || 0;
+                const contrast = parseFloat(document.getElementById('contrast').value) || 1.0;
+                const saturation = parseFloat(document.getElementById('saturation').value) || 1.0;
+                const useDithering = document.getElementById('ditheringEnabled').checked;
+                const useAttributeClash = document.getElementById('attributeClash').checked;
+                
+                try {
+                    let adjustedImage = applyImageAdjustments(originalImageData, brightness, contrast, saturation);
+                    if (!adjustedImage) return;
+                    
+                    const palette = getCurrentPalette();
+                    let quantizedImage = quantizeToZX(adjustedImage, palette, useDithering);
+                    if (!quantizedImage) return;
+                    
+                    if (useAttributeClash) {
+                        const cellSize = parseInt(document.getElementById('cellSize').value) || 8;
+                        const bias = parseFloat(document.getElementById('bias').value) || 0.5;
+                        quantizedImage = applyAttributeClash(quantizedImage, palette, cellSize, bias);
+                    }
+                    
+                    processedImageData = quantizedImage;
+                    currentImageData = processedImageData;
+                    drawImageToCanvas(currentImageData);
+                    log('Image processed successfully with ' + palette.length + ' colors');
+                } catch (error) {
+                    showError('Error processing image: ' + error.message);
+                }
+            }
+
+            function analyzeImage() {
+                if (!currentImageData || !currentImageData.data) {
+                    autoOpenFileDialog();
+                    return;
+                }
+                
+                try {
+                    const data = currentImageData.data;
+                    let totalBrightness = 0;
+                    let darkPixels = 0;
+                    let brightPixels = 0;
+                    let totalSaturation = 0;
+                    const palette = getCurrentPalette();
+                    const colorCounts = new Array(palette.length).fill(0);
+                    
+                    for (let i = 0; i < data.length; i += 4) {
+                        const r = data[i];
+                        const g = data[i + 1];
+                        const b = data[i + 2];
+                        const brightness = (r + g + b) / 3;
+                        totalBrightness += brightness;
+                        
+                        if (brightness < 85) darkPixels++;
+                        else if (brightness > 170) brightPixels++;
+                        
+                        const max = Math.max(r, g, b);
+                        const min = Math.min(r, g, b);
+                        const saturation = max > 0 ? (max - min) / max : 0;
+                        totalSaturation += saturation;
+                        
+                        const colorIndex = findNearestColor([r, g, b], palette);
+                        colorCounts[colorIndex]++;
+                    }
+                    
+                    const totalPixels = data.length / 4;
+                    const avgBrightness = totalBrightness / totalPixels;
+                    const darkRatio = darkPixels / totalPixels;
+                    const brightRatio = brightPixels / totalPixels;
+                    const avgSaturation = totalSaturation / totalPixels;
+                    
+                    let suggestions = [];
+                    if (avgBrightness < 80) {
+                        suggestions.push('• Image is quite dark - consider increasing brightness (+30 to +50)');
+                    } else if (avgBrightness > 180) {
+                        suggestions.push('• Image is very bright - consider reducing brightness (-20 to -40)');
+                    }
+                    
+                    if (avgSaturation < 0.3) {
+                        suggestions.push('• Low color saturation - try increasing saturation (1.2-1.5)');
+                    } else if (avgSaturation > 0.8) {
+                        suggestions.push('• Very saturated - consider reducing saturation (0.7-0.9)');
+                    }
+                    
+                    if (suggestions.length === 0) {
+                        suggestions.push('• Image looks well-balanced for ZX Spectrum conversion');
+                    }
+                    
+                    const results = [
+                        'ZX SPECTRUM ANALYSIS:',
+                        'Average Brightness: ' + avgBrightness.toFixed(1) + ' / 255',
+                        'Dark/Bright Ratio: ' + (darkRatio * 100).toFixed(1) + '% / ' + (brightRatio * 100).toFixed(1) + '%',
+                        'Colorfulness: ' + (avgSaturation * 100).toFixed(1) + '%',
+                        'Palette: ' + (palette.length === 8 ? 'Base 8' : 'Base 8 + Bright'),
+                        '',
+                        'SUGGESTIONS:',
+                        suggestions.join('\n')
+                    ].join('\n');
+                    
+                    log(results);
+                } catch (error) {
+                    showError('Error analyzing image: ' + error.message);
+                }
+            }
+
+            function smartEnhanceImage() {
+                if (!originalImageData || !originalImageData.data) {
+                    autoOpenFileDialog();
+                    return;
+                }
+                
+                try {
+                    const data = originalImageData.data;
+                    let totalBrightness = 0;
+                    let totalSaturation = 0;
+                    let darkPixels = 0;
+                    
+                    for (let i = 0; i < data.length; i += 4) {
+                        const r = data[i];
+                        const g = data[i + 1];
+                        const b = data[i + 2];
+                        const brightness = (r + g + b) / 3;
+                        totalBrightness += brightness;
+                        
+                        if (brightness < 85) darkPixels++;
+                        
+                        const max = Math.max(r, g, b);
+                        const min = Math.min(r, g, b);
+                        const saturation = max > 0 ? (max - min) / max : 0;
+                        totalSaturation += saturation;
+                    }
+                    
+                    const totalPixels = data.length / 4;
+                    const avgBrightness = totalBrightness / totalPixels;
+                    const avgSaturation = totalSaturation / totalPixels;
+                    const darkRatio = darkPixels / totalPixels;
+                    
+                    let enhancedBrightness = 0;
+                    let enhancedContrast = 1.0;
+                    let enhancedSaturation = 1.0;
+                    
+                    if (avgBrightness < 80) {
+                        enhancedBrightness = Math.min(50, (80 - avgBrightness) * 0.5);
+                    } else if (avgBrightness > 180) {
+                        enhancedBrightness = Math.max(-30, (180 - avgBrightness) * 0.3);
+                    }
+                    
+                    if (darkRatio > 0.6) {
+                        enhancedContrast = Math.min(1.4, 1.0 + (darkRatio - 0.4) * 0.8);
+                    } else if (darkRatio < 0.2) {
+                        enhancedContrast = Math.max(0.7, 1.0 - (0.3 - darkRatio) * 0.6);
+                    }
+                    
+                    if (avgSaturation < 0.3) {
+                        enhancedSaturation = Math.min(1.3, 1.0 + (0.4 - avgSaturation));
+                    } else if (avgSaturation > 0.8) {
+                        enhancedSaturation = Math.max(0.7, 1.0 - (avgSaturation - 0.7) * 0.6);
+                    }
+                    
+                    document.getElementById('brightness').value = Math.round(enhancedBrightness);
+                    document.getElementById('contrast').value = enhancedContrast.toFixed(1);
+                    document.getElementById('saturation').value = enhancedSaturation.toFixed(1);
+                    document.getElementById('brightnessValue').textContent = Math.round(enhancedBrightness);
+                    document.getElementById('contrastValue').textContent = enhancedContrast.toFixed(1);
+                    document.getElementById('saturationValue').textContent = enhancedSaturation.toFixed(1);
+                    
+                    processImageWithCurrentSettings();
+                    log('Smart enhancement applied for ZX: B=' + enhancedBrightness + ', C=' + enhancedContrast.toFixed(1) + ', S=' + enhancedSaturation.toFixed(1));
+                } catch (error) {
+                    showError('Error in smart enhancement: ' + error.message);
+                }
+            }
+
+            function applyAdjustments() {
+                if (!processedImageData || !processedImageData.data) {
+                    return showWarning('No processed image available to apply');
+                }
+                
+                try {
+                    originalImageData = new ImageData(new Uint8ClampedArray(processedImageData.data), processedImageData.width, processedImageData.height);
+                    
+                    document.getElementById('brightness').value = 0;
+                    document.getElementById('contrast').value = 1.0;
+                    document.getElementById('saturation').value = 1.0;
+                    document.getElementById('brightnessValue').textContent = '0';
+                    document.getElementById('contrastValue').textContent = '1.0';
+                    document.getElementById('saturationValue').textContent = '1.0';
+                    
+                    processImageWithCurrentSettings();
+                    log('Adjustments applied and reset');
+                } catch (error) {
+                    showError('Error applying adjustments: ' + error.message);
+                }
+            }
+
+            function resetAdjustments() {
+                if (!originalImageData) {
+                    return showWarning('No original image to reset to');
+                }
+                
+                document.getElementById('brightness').value = 0;
+                document.getElementById('contrast').value = 1.0;
+                document.getElementById('saturation').value = 1.0;
+                document.getElementById('brightnessValue').textContent = '0';
+                document.getElementById('contrastValue').textContent = '1.0';
+                document.getElementById('saturationValue').textContent = '1.0';
+                
+                processImageWithCurrentSettings();
+                log('Adjustments reset to original values');
+            }
+
+            function applyOutlineMode() {
+                if (!originalImageData || !originalImageData.data) {
+                    autoOpenFileDialog();
+                    return;
+                }
+                
+                try {
+                    const enabled = document.getElementById('outlineEnabled').checked;
+                    const threshold = parseFloat(document.getElementById('edgeThreshold').value) || 0.3;
+                    const brushMin = parseInt(document.getElementById('brushMin').value) || 1;
+                    const brushMax = parseInt(document.getElementById('brushMax').value) || 4;
+                    const smoothness = parseFloat(document.getElementById('smoothness').value) || 0.5;
+                    
+                    const brightness = parseInt(document.getElementById('brightness').value) || 0;
+                    const contrast = parseFloat(document.getElementById('contrast').value) || 1.0;
+                    const saturation = parseFloat(document.getElementById('saturation').value) || 1.0;
+                    
+                    let adjustedImage = applyImageAdjustments(originalImageData, brightness, contrast, saturation);
+                    if (!adjustedImage) return;
+                    
+                    const palette = getCurrentPalette();
+                    
+                    if (!enabled) {
+                        processedImageData = quantizeToZX(adjustedImage, palette, document.getElementById('ditheringEnabled').checked);
+                        currentImageData = processedImageData;
+                        drawImageToCanvas(currentImageData);
+                        log('Outline disabled - standard quantization applied');
+                        return;
+                    }
+                    
+                    const saliency = calculateSaliency(adjustedImage);
+                    const edges = calculateEdges(adjustedImage);
+                    
+                    if (!saliency || !edges) {
+                        showError('Failed to calculate image features');
+                        return;
+                    }
+                    
+                    const tempCanvas = document.createElement('canvas');
+                    tempCanvas.width = 256;
+                    tempCanvas.height = 192;
+                    const tempCtx = tempCanvas.getContext('2d');
+                    
+                    tempCtx.putImageData(adjustedImage, 0, 0);
+                    
+                    // Use black for outline (ZX color 0)
+                    const outlineColor = palette[0]; // Black
+                    tempCtx.strokeStyle = 'rgb(' + outlineColor.join(',') + ')';
+                    tempCtx.lineCap = 'round';
+                    tempCtx.lineJoin = 'round';
+                    
+                    for (let y = 1; y < 191; y += 2) {
+                        for (let x = 1; x < 255; x += 2) {
+                            const idx = y * 256 + x;
+                            const edgeStrength = edges[idx];
+                            const saliencyValue = saliency[idx];
+                            
+                            if (edgeStrength > threshold) {
+                                const combinedStrength = (edgeStrength + saliencyValue * 0.5) / 1.5;
+                                const brushWidth = brushMin + (brushMax - brushMin) * combinedStrength;
+                                
+                                tempCtx.lineWidth = brushWidth;
+                                tempCtx.globalAlpha = 0.7 + 0.3 * combinedStrength;
+                                
+                                tempCtx.beginPath();
+                                const variation = (1 - smoothness) * 2;
+                                const offsetX = (Math.random() - 0.5) * variation;
+                                const offsetY = (Math.random() - 0.5) * variation;
+                                tempCtx.moveTo(x + offsetX, y + offsetY);
+                                tempCtx.lineTo(x + offsetX + 1, y + offsetY + 1);
+                                tempCtx.stroke();
+                            }
+                        }
+                    }
+                    
+                    tempCtx.globalAlpha = 1.0;
+                    
+                    const outlineResult = tempCtx.getImageData(0, 0, 256, 192);
+                    processedImageData = quantizeToZX(outlineResult, palette, document.getElementById('ditheringEnabled').checked);
+                    
+                    if (document.getElementById('attributeClash').checked) {
+                        const cellSize = parseInt(document.getElementById('cellSize').value) || 8;
+                        const bias = parseFloat(document.getElementById('bias').value) || 0.5;
+                        processedImageData = applyAttributeClash(processedImageData, palette, cellSize, bias);
+                    }
+                    
+                    currentImageData = processedImageData;
+                    drawImageToCanvas(currentImageData);
+                    
+                    log('ZX Outline mode applied with brush width ' + brushMin + '-' + brushMax);
+                } catch (error) {
+                    showError('Error applying outline mode: ' + error.message);
+                }
+            }
+
+            function applyHatchingMode() {
+                if (!originalImageData || !originalImageData.data) {
+                    autoOpenFileDialog();
+                    return;
+                }
+                
+                try {
+                    const density = parseFloat(document.getElementById('density').value) || 0.5;
+                    const pattern = document.getElementById('pattern').value || 'dot';
+                    const angle = parseInt(document.getElementById('angle').value) || 45;
+                    const lineWidth = parseInt(document.getElementById('lineWidth').value) || 1;
+                    
+                    const brightness = parseInt(document.getElementById('brightness').value) || 0;
+                    const contrast = parseFloat(document.getElementById('contrast').value) || 1.0;
+                    const saturation = parseFloat(document.getElementById('saturation').value) || 1.0;
+                    
+                    let adjustedImage = applyImageAdjustments(originalImageData, brightness, contrast, saturation);
+                    if (!adjustedImage) return;
+                    
+                    const tempCanvas = document.createElement('canvas');
+                    tempCanvas.width = 256;
+                    tempCanvas.height = 192;
+                    const tempCtx = tempCanvas.getContext('2d');
+                    
+                    // Fill with bright white (ZX bright white)
+                    tempCtx.fillStyle = 'rgb(255,255,255)';
+                    tempCtx.fillRect(0, 0, 256, 192);
+                    
+                    // Use black for patterns
+                    tempCtx.fillStyle = 'rgb(0,0,0)';
+                    tempCtx.strokeStyle = 'rgb(0,0,0)';
+                    tempCtx.lineWidth = lineWidth;
+                    
+                    const data = adjustedImage.data;
+                    const patternSize = Math.max(4, Math.floor(8 / density));
+                    
+                    for (let y = 0; y < 192; y += patternSize) {
+                        for (let x = 0; x < 256; x += patternSize) {
+                            let avgLuminance = 0;
+                            let pixelCount = 0;
+                            
+                            for (let py = y; py < Math.min(y + patternSize, 192); py++) {
+                                for (let px = x; px < Math.min(x + patternSize, 256); px++) {
+                                    const idx = (py * 256 + px) * 4;
+                                    const lum = 0.299 * data[idx] + 0.587 * data[idx + 1] + 0.114 * data[idx + 2];
+                                    avgLuminance += lum;
+                                    pixelCount++;
+                                }
+                            }
+                            avgLuminance /= pixelCount;
+                            
+                            const patternDensity = 1 - (avgLuminance / 255);
+                            
+                            if (patternDensity > 0.1) {
+                                drawHatchingPattern(tempCtx, x, y, patternSize, pattern, patternDensity, angle);
+                            }
+                        }
+                    }
+                    
+                    const edges = calculateEdges(adjustedImage);
+                    if (edges) {
+                        tempCtx.lineWidth = 1;
+                        for (let y = 1; y < 191; y++) {
+                            for (let x = 1; x < 255; x++) {
+                                const idx = y * 256 + x;
+                                if (edges[idx] > 0.3) {
+                                    tempCtx.fillRect(x, y, 1, 1);
+                                }
+                            }
+                        }
+                    }
+                    
+                    const hatchResult = tempCtx.getImageData(0, 0, 256, 192);
+                    const bwData = new Uint8ClampedArray(hatchResult.data);
+                    
+                    // Force to black/white only
+                    for (let i = 0; i < bwData.length; i += 4) {
+                        const lum = 0.299 * bwData[i] + 0.587 * bwData[i + 1] + 0.114 * bwData[i + 2];
+                        const color = lum > 128 ? [255, 255, 255] : [0, 0, 0];
+                        bwData[i] = color[0];
+                        bwData[i + 1] = color[1];
+                        bwData[i + 2] = color[2];
+                    }
+                    
+                    processedImageData = new ImageData(bwData, 256, 192);
+                    currentImageData = processedImageData;
+                    drawImageToCanvas(currentImageData);
+                    
+                    log('ZX B/W Hatching applied: pattern=' + pattern + ', density=' + density.toFixed(1));
+                } catch (error) {
+                    showError('Error applying hatching mode: ' + error.message);
+                }
+            }
+
+            function drawHatchingPattern(ctx, x, y, size, pattern, density, angle) {
+                const centerX = x + size / 2;
+                const centerY = y + size / 2;
+                const angleRad = (angle * Math.PI) / 180;
+                
+                ctx.save();
+                ctx.translate(centerX, centerY);
+                ctx.rotate(angleRad);
+                
+                const spacing = Math.max(1, Math.floor(size / (density * 4)));
+                
+                switch (pattern) {
+                    case 'dot':
+                        for (let i = -size/2; i < size/2; i += spacing) {
+                            for (let j = -size/2; j < size/2; j += spacing) {
+                                if (Math.random() < density) {
+                                    ctx.fillRect(i, j, 1, 1);
+                                }
+                            }
+                        }
+                        break;
+                        
+                    case 'line':
+                        ctx.beginPath();
+                        for (let i = -size/2; i < size/2; i += spacing) {
+                            ctx.moveTo(i, -size/2);
+                            ctx.lineTo(i, size/2);
+                        }
+                        ctx.stroke();
+                        break;
+                        
+                    case 'cross':
+                        ctx.beginPath();
+                        for (let i = -size/2; i < size/2; i += spacing) {
+                            ctx.moveTo(-size/2, i);
+                            ctx.lineTo(size/2, i);
+                        }
+                        for (let i = -size/2; i < size/2; i += spacing) {
+                            ctx.moveTo(i, -size/2);
+                            ctx.lineTo(i, size/2);
+                        }
+                        ctx.stroke();
+                        break;
+                }
+                
+                ctx.restore();
+            }
+
+            function toggleImageView() {
+                imageVisible = !imageVisible;
+                const btn = document.getElementById('btnToggle');
+                btn.textContent = imageVisible ? 'HIDE IMAGE' : 'SHOW IMAGE';
+                drawImageToCanvas(currentImageData);
+                log('Image visibility: ' + (imageVisible ? 'ON' : 'OFF'));
+            }
+
+            function downloadImage() {
+                try {
+                    let dataURL;
+                    let filename = 'zx48_image_' + currentMode + '_' + Date.now() + '.png';
+                    
+                    if (currentImageData) {
+                        const tempCanvas = document.createElement('canvas');
+                        tempCanvas.width = 256;
+                        tempCanvas.height = 192;
+                        const tempCtx = tempCanvas.getContext('2d');
+                        
+                        tempCtx.fillStyle = '#000000';
+                        tempCtx.fillRect(0, 0, 256, 192);
+                        
+                        tempCtx.putImageData(currentImageData, 0, 0);
+                        dataURL = tempCanvas.toDataURL('image/png', 1.0);
+                        
+                        log('Downloading processed ZX48 image: ' + filename);
+                    } else {
+                        const tempCanvas = document.createElement('canvas');
+                        tempCanvas.width = 256;
+                        tempCanvas.height = 192;
+                        const tempCtx = tempCanvas.getContext('2d');
+                        tempCtx.fillStyle = '#000000';
+                        tempCtx.fillRect(0, 0, 256, 192);
+                        dataURL = tempCanvas.toDataURL('image/png', 1.0);
+                        
+                        log('Downloaded empty canvas (no image processed)', 'warning');
+                    }
+                    
+                    const link = document.createElement('a');
+                    link.style.display = 'none';
+                    link.download = filename;
+                    link.href = dataURL;
+                    
+                    document.body.appendChild(link);
+                    link.click();
+                    
+                    setTimeout(() => {
+                        document.body.removeChild(link);
+                        URL.revokeObjectURL(dataURL);
+                    }, 100);
+                    
+                    log('Download initiated successfully');
+                    
+                } catch (error) {
+                    showError('Error downloading image: ' + error.message);
+                }
+            }
+
+            function handleImageUpload(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+                
+                log('Loading image: ' + file.name);
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = new Image();
+                    img.onload = function() {
+                        try {
+                            const tempCanvas = document.createElement('canvas');
+                            tempCanvas.width = 256;
+                            tempCanvas.height = 192;
+                            const tempCtx = tempCanvas.getContext('2d');
+                            
+                            // Auto-fit preservando aspecto con letterbox
+                            const scale = Math.min(256/img.width, 192/img.height);
+                            const scaledW = img.width * scale;
+                            const scaledH = img.height * scale;
+                            const offsetX = (256 - scaledW) / 2;
+                            const offsetY = (192 - scaledH) / 2;
+                            
+                            // Fill with black background (letterbox)
+                            tempCtx.fillStyle = '#000';
+                            tempCtx.fillRect(0, 0, 256, 192);
+                            
+                            // Draw centered and scaled image
+                            tempCtx.drawImage(img, offsetX, offsetY, scaledW, scaledH);
+                            originalImageData = tempCtx.getImageData(0, 0, 256, 192);
+                            processImageWithCurrentSettings();
+                            log('Image loaded and fitted: ' + img.width + 'x' + img.height + ' -> 256x192 (scale: ' + scale.toFixed(2) + ')');
+                        } catch (error) {
+                            showError('Error processing uploaded image: ' + error.message);
+                        }
+                    };
+                    img.onerror = function() {
+                        showError('Failed to load image file');
+                    };
+                    img.src = e.target.result;
+                };
+                reader.onerror = function() {
+                    showError('Failed to read image file');
+                };
+                reader.readAsDataURL(file);
+            }
+
+            function handleSliderChange(event) {
+                const sliderId = event.target.id;
+                const value = event.target.value;
+                
+                const valueElements = {
+                    'brightness': 'brightnessValue',
+                    'contrast': 'contrastValue', 
+                    'saturation': 'saturationValue',
+                    'cellSize': 'cellSizeValue',
+                    'bias': 'biasValue',
+                    'edgeThreshold': 'edgeThresholdValue',
+                    'brushMin': 'brushMinValue',
+                    'brushMax': 'brushMaxValue', 
+                    'smoothness': 'smoothnessValue',
+                    'density': 'densityValue',
+                    'angle': 'angleValue',
+                    'lineWidth': 'lineWidthValue'
+                };
+                
+                const valueElement = document.getElementById(valueElements[sliderId]);
+                if (valueElement) {
+                    if (sliderId === 'contrast' || sliderId === 'saturation' || sliderId === 'edgeThreshold' || 
+                        sliderId === 'smoothness' || sliderId === 'density' || sliderId === 'bias') {
+                        valueElement.textContent = parseFloat(value).toFixed(1);
+                    } else {
+                        valueElement.textContent = value;
+                    }
+                }
+                
+                // Handle pattern select
+                if (sliderId === 'pattern') {
+                    document.getElementById('patternValue').textContent = value;
+                }
+                
+                // Auto-apply if live preview is on and we're in classic mode
+                if (document.getElementById('livePreview').checked && 
+                    ['brightness', 'contrast', 'saturation', 'cellSize', 'bias'].includes(sliderId)) {
+                    processImageWithCurrentSettings();
+                }
+            }
+
+            function handleModeChange() {
+                const selectedMode = document.querySelector('input[name="mode"]:checked').value;
+                currentMode = selectedMode;
+                
+                // Hide all mode-specific controls
+                document.querySelectorAll('.mode-controls').forEach(el => {
+                    el.classList.remove('active');
+                });
+                
+                // Show relevant controls
+                if (selectedMode === 'outline') {
+                    document.getElementById('outlineControls').classList.add('active');
+                } else if (selectedMode === 'hatching') {
+                    document.getElementById('hatchingControls').classList.add('active');
+                }
+                
+                log('Mode changed to: ' + selectedMode.toUpperCase());
+                
+                // Auto-reprocess if image exists
+                if (originalImageData) {
+                    if (selectedMode === 'classic8' || selectedMode === 'classic15') {
+                        processImageWithCurrentSettings();
+                    } else if (selectedMode === 'outline') {
+                        applyOutlineMode();
+                    } else if (selectedMode === 'hatching') {
+                        applyHatchingMode();
+                    }
+                }
+            }
+
+            function handleAttributeClashChange() {
+                const enabled = document.getElementById('attributeClash').checked;
+                const controls = document.getElementById('attributeControls');
+                
+                if (enabled) {
+                    controls.classList.add('active');
+                } else {
+                    controls.classList.remove('active');
+                }
+                
+                if (originalImageData && (currentMode === 'classic8' || currentMode === 'classic15')) {
+                    processImageWithCurrentSettings();
+                }
+                
+                log('Attribute Clash ' + (enabled ? 'ENABLED' : 'DISABLED'));
+            }
+
+            function runSanityChecks() {
+                const checks = [];
+                
+                try {
+                    // Test color quantization
+                    const blackIndex = findNearestColor([0, 0, 0], ZX_BASE_8);
+                    const whiteIndex = findNearestColor([255, 255, 255], ZX_BASE_8);
+                    checks.push('ZX Color quantization: ' + (blackIndex === 0 && whiteIndex === 7 ? 'PASS' : 'FAIL'));
+                    
+                    // Test image adjustments
+                    const testData = new ImageData(new Uint8ClampedArray([100, 100, 100, 255]), 1, 1);
+                    const adjusted = applyImageAdjustments(testData, 50);
+                    const newBrightness = adjusted ? (adjusted.data[0] + adjusted.data[1] + adjusted.data[2]) / 3 : 0;
+                    checks.push('Brightness adjustment: ' + (newBrightness > 130 ? 'PASS' : 'FAIL'));
+                    
+                    // Test dithering
+                    const testImg = new ImageData(new Uint8ClampedArray(100 * 100 * 4).fill(128), 100, 100);
+                    const dithered = quantizeToZX(testImg, ZX_BASE_8, true);
+                    const noDither = quantizeToZX(testImg, ZX_BASE_8, false);
+                    checks.push('ZX Dithering: ' + (dithered && noDither ? 'PASS' : 'FAIL'));
+                    
+                    // Test attribute clash
+                    const testAttr = applyAttributeClash(testImg, ZX_BASE_8, 8, 0.5);
+                    checks.push('Attribute Clash: ' + (testAttr ? 'PASS' : 'FAIL'));
+                    
+                } catch (error) {
+                    checks.push('Sanity check error: ' + error.message);
+                }
+                
+                return checks.join('\n');
+            }
+
+            function initializeApp() {
+                try {
+                    // Event listeners
+                    document.getElementById('imageInput').addEventListener('change', handleImageUpload);
+                    
+                    // Sliders
+                    ['brightness', 'contrast', 'saturation', 'cellSize', 'bias', 'edgeThreshold', 
+                     'brushMin', 'brushMax', 'smoothness', 'density', 'angle', 'lineWidth'].forEach(id => {
+                        const element = document.getElementById(id);
+                        if (element) {
+                            element.addEventListener('input', handleSliderChange);
+                        }
+                    });
+                    
+                    // Pattern select
+                    const patternSelect = document.getElementById('pattern');
+                    if (patternSelect) {
+                        patternSelect.addEventListener('change', handleSliderChange);
+                    }
+                    
+                    // Mode radios
+                    document.querySelectorAll('input[name="mode"]').forEach(radio => {
+                        radio.addEventListener('change', handleModeChange);
+                    });
+                    
+                    // Checkboxes
+                    document.getElementById('ditheringEnabled').addEventListener('change', () => {
+                        if (originalImageData && (currentMode === 'classic8' || currentMode === 'classic15')) {
+                            processImageWithCurrentSettings();
+                        }
+                    });
+                    
+                    document.getElementById('attributeClash').addEventListener('change', handleAttributeClashChange);
+                    
+                    // Buttons
+                    document.getElementById('btnAnalyze').addEventListener('click', analyzeImage);
+                    document.getElementById('btnSmart').addEventListener('click', smartEnhanceImage);
+                    document.getElementById('btnApply').addEventListener('click', applyAdjustments);
+                    document.getElementById('btnReset').addEventListener('click', resetAdjustments);
+                    document.getElementById('btnOutline').addEventListener('click', applyOutlineMode);
+                    document.getElementById('btnHatching').addEventListener('click', applyHatchingMode);
+                    document.getElementById('btnToggle').addEventListener('click', toggleImageView);
+                    document.getElementById('btnDownload').addEventListener('click', downloadImage);
+                    
+                    // Initialize canvas
+                    ctx.fillStyle = '#000';
+                    ctx.fillRect(0, 0, 256, 192);
+                    
+                    // Initialize mode
+                    handleModeChange();
+                    
+                    log('ZX48 Studio initialized successfully!');
+                    log('Ready to process images in 4 modes: Classic ZX (8/15 colors), Outline, B/W Hatching');
+                    log('Features: Auto-fit, Attribute Clash, Floyd-Steinberg dithering');
+                    
+                    // Run sanity checks in background
+                    setTimeout(() => {
+                        const checkResults = runSanityChecks();
+                        console.log('[ZXImageLab] Sanity checks:\n' + checkResults);
+                    }, 1000);
+                    
+                } catch (error) {
+                    showError('Initialization error: ' + error.message);
+                }
+            }
+
+            // Public API
+            return {
+                init: initializeApp,
+                analyze: analyzeImage,
+                smartEnhance: smartEnhanceImage,
+                applyAdjustments: applyAdjustments,
+                resetAdjustments: resetAdjustments,
+                applyOutline: applyOutlineMode,
+                applyHatching: applyHatchingMode,
+                toggleView: toggleImageView,
+                download: downloadImage,
+                processImage: processImageWithCurrentSettings,
+                log: log
+            };
+        })();
+
+        // Initialize when DOM is ready
+        document.addEventListener('DOMContentLoaded', ZXImageLab.init);
+    </script>
+</body>
+</html>
+                            
